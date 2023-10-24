@@ -1,4 +1,5 @@
 import express from "express";
+import { body } from "express-validator";
 
 import { getPosts, postPost } from "../controllers/feedController.js";
 
@@ -8,6 +9,13 @@ const router = express.Router();
 router.get("/posts", getPosts);
 
 // POST /feed/post
-router.post("/post", postPost);
+router.post(
+  "/post",
+  [
+    body("title").trim().isLength({ min: 5 }),
+    body("content").trim().isLength({ min: 5 }),
+  ],
+  postPost
+);
 
 export default router;
