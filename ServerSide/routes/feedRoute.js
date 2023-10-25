@@ -8,18 +8,20 @@ import {
   postPost,
   putPost,
 } from "../controllers/feedController.js";
+import isAuth from "../middleware/isAuth.js";
 
 const router = express.Router();
 
 // GET /feed/posts
-router.get("/posts", getPosts);
+router.get("/posts", isAuth, getPosts);
 
 // GET /feed/post/:postId
-router.get("/post/:postId", getPost);
+router.get("/post/:postId", isAuth, getPost);
 
 // PUT /feed/post/:postId
 router.put(
   "/post/:postId",
+  isAuth,
   [
     body("title").trim().isLength({ min: 5 }),
     body("content").trim().isLength({ min: 5 }),
@@ -30,6 +32,7 @@ router.put(
 // POST /feed/post
 router.post(
   "/post",
+  isAuth,
   [
     body("title").trim().isLength({ min: 5 }),
     body("content").trim().isLength({ min: 5 }),
@@ -38,6 +41,6 @@ router.post(
 );
 
 // DELETE /feed/post/:postId
-router.delete("/post/:postId", deletePost);
+router.delete("/post/:postId", isAuth, deletePost);
 
 export default router;

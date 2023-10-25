@@ -10,6 +10,8 @@ import multer from "multer";
 import mongoose from "mongoose";
 
 import feedRoutes from "./routes/feedRoute.js";
+import authRoutes from "./routes/authRoute.js";
+import statusRoutes from "./routes/statusRoute.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -54,13 +56,17 @@ app.use((req, res, next) => {
 });
 
 app.use("/feed", feedRoutes);
+app.use("/auth", authRoutes);
+app.use(statusRoutes);
 
 app.use((error, req, res, next) => {
   console.log(error);
   const status = error.statusCode || 500,
-    message = error.message;
+    message = error.message,
+    data = error.data;
   res.status(status).json({
     message,
+    data,
   });
 });
 
