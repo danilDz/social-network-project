@@ -4,6 +4,7 @@ import Post from "../models/postModel.js";
 import User from "../models/userModel.js";
 
 import { deleteImage } from "../utils/image.js";
+import socket from "../utils/socket.js";
 
 export const getPosts = async (req, res, next) => {
     const page = req.query.page || 1,
@@ -12,6 +13,7 @@ export const getPosts = async (req, res, next) => {
       const totalItems = await Post.find().countDocuments();
       const posts = await Post.find()
         .populate("creator")
+        .sort({ createdAt: -1 })
         .skip((page - 1) * perPage)
         .limit(perPage);
 
@@ -63,13 +65,13 @@ export const getPosts = async (req, res, next) => {
     }
 
     try {
-      const post = await Post.findById(postId);
+      const post = await Post.findById(postId).populate("creator");
       if (!post) {
         const error = new Error("Couldn't find a post.");
         error.statusCode = 404;
         throw error;
       }
-      if (post.creator.toString() !== req.userId) {
+      if (post.creator._id.toString() !== req.userId) {
         const error = new Error("Not authorized!");
         error.statusCode = 403;
         throw error;
@@ -81,6 +83,7 @@ export const getPosts = async (req, res, next) => {
       post.imageUrl = imageUrl;
 
       const result = await post.save();
+      socket.getIO().emit("posts", { action: "update", postData: result });
       res.status(200).json({
         message: "Post updated!",
         post: result,
@@ -120,6 +123,10 @@ export const getPosts = async (req, res, next) => {
       const user = await User.findById(req.userId);
       user.posts.push(post);
       await user.save();
+      socket.getIO().emit("posts", {
+        action: "create",
+        post: { ...post._doc, creator: { _id: req.userId, name: user.name } },
+      });
       res.status(201).json({
         message: "Post was created successfully!",
         post: post,
@@ -153,6 +160,10 @@ export const getPosts = async (req, res, next) => {
       const user = await User.findById(req.userId);
       user.posts.pull(postId);
       await user.save();
+      socket.getIO().emit("posts", {
+        action: "delete",
+        postId: postId,
+      });
       res.status(200).json({
         message: "Post successfully deleted!",
       });

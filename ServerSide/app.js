@@ -8,10 +8,13 @@ import express from "express";
 import bodyParser from "body-parser";
 import multer from "multer";
 import mongoose from "mongoose";
+import { createServer } from "http";
 
 import feedRoutes from "./routes/feedRoute.js";
 import authRoutes from "./routes/authRoute.js";
 import statusRoutes from "./routes/statusRoute.js";
+
+import socket from "./utils/socket.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -72,9 +75,14 @@ app.use((error, req, res, next) => {
 
 mongoose
   .connect(process.env.MONGODB_CONNECTION_URI)
-  .then((result) => {
-    app.listen(process.env.PORT, () => {
+  .then( async (result) => {
+    const server = createServer(app);
+    server.listen(process.env.PORT, () => {
       console.log("Server is running on port 8080!");
+    });
+    const io = socket.init(server);
+    io.on("connection", (socket) => {
+      console.log("Client connected!");
     });
   })
   .catch((err) => console.log(err));
