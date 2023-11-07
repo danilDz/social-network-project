@@ -78,7 +78,7 @@ mongoose
   .then( async (result) => {
     const server = createServer(app);
     server.listen(process.env.PORT, () => {
-      console.log("Server is running on port 8080!");
+      console.log(`Server is running on port ${process.env.PORT}!`);
     });
     const io = socket.init(server);
     io.on("connection", (socket) => {

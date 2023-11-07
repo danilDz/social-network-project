@@ -122,11 +122,11 @@ export const getPosts = async (req, res, next) => {
       await post.save();
       const user = await User.findById(req.userId);
       user.posts.push(post);
-      await user.save();
-      socket.getIO().emit("posts", {
-        action: "create",
-        post: { ...post._doc, creator: { _id: req.userId, name: user.name } },
-      });
+      const updatedUser = await user.save();
+      // socket.getIO().emit("posts", {
+      //   action: "create",
+      //   post: { ...post._doc, creator: { _id: req.userId, name: user.name } },
+      // });
       res.status(201).json({
         message: "Post was created successfully!",
         post: post,
@@ -135,6 +135,7 @@ export const getPosts = async (req, res, next) => {
           name: user.name,
         },
       });
+      return updatedUser;
     } catch (err) {
       if (!err.statusCode) err.statusCode = 500;
       next(err);
